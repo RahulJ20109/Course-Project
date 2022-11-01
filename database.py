@@ -2,25 +2,32 @@ import sqlite3 as sql
 import config
 
 # function to establish connection to the database, enable foreign key constraint support, and create cursor
+
+
 def connection():
-    conn = sql.connect(config.database_name + '.db')
-    conn.execute("PRAGMA foreign_keys = ON;")
+    conn = sql.connect('userDetails.db')
     c = conn.cursor()
     return conn, c
 
 # function to establish connection to the database and create tables (if they don't exist yet)
+
+
 def db_init():
-    conn, c = connection()
-    with conn:
-        c.execute(
-            """
+
+    conn = sql.connect('userDetails.db')
+    c = conn.cursor()
+
+    c.executescript(
+        """
             CREATE TABLE IF NOT EXISTS patient_record (
                 id TEXT PRIMARY KEY,
+                password TEXT,
                 name TEXT NOT NULL,
                 age INTEGER NOT NULL,
                 gender TEXT NOT NULL,
                 date_of_birth TEXT NOT NULL,
                 blood_group TEXT NOT NULL,
+                verification_document TEXT NOT NULL,
                 contact_number_1 TEXT NOT NULL,
                 contact_number_2 TEXT,
                 aadhar_or_voter_id TEXT NOT NULL UNIQUE,
@@ -38,22 +45,22 @@ def db_init():
                 time_of_registration TEXT NOT NULL
             );
             """
-        )
+    )
     with conn:
         c.execute(
+            # healthCareProfessional_record
             """
-            CREATE TABLE IF NOT EXISTS doctor_record (
+            CREATE TABLE IF NOT EXISTS healthCareProfessional_record (
                 id TEXT PRIMARY KEY,
+                password TEXT,
                 name TEXT NOT NULL,
                 age INTEGER NOT NULL,
                 gender TEXT NOT NULL,
                 date_of_birth TEXT NOT NULL,
                 blood_group TEXT NOT NULL,
-                department_id TEXT NOT NULL,
-                department_name TEXT NOT NULL,
                 contact_number_1 TEXT NOT NULL,
                 contact_number_2 TEXT,
-                aadhar_or_voter_id TEXT NOT NULL UNIQUE,
+                verification_document TEXT NOT NULL UNIQUE,
                 email_id TEXT NOT NULL UNIQUE,
                 qualification TEXT NOT NULL,
                 specialisation TEXT NOT NULL,
@@ -61,24 +68,97 @@ def db_init():
                 address TEXT NOT NULL,
                 city TEXT NOT NULL,
                 state TEXT NOT NULL,
+                pin_code TEXT NOT NULL
+                
+            );
+            """
+            # department_id TEXT NOT NULL,
+            # department_name TEXT NOT NULL,
+            # FOREIGN KEY (department_id) REFERENCES department_record(id)
+            #     ON UPDATE CASCADE
+            #     ON DELETE RESTRICT
+        )
+    # with conn:
+    #     c.execute(
+    #         """
+    #         CREATE TABLE IF NOT EXISTS department_record (
+    #             id TEXT PRIMARY KEY,
+    #             name TEXT NOT NULL UNIQUE,
+    #             description TEXT NOT NULL,
+    #             contact_number_1 TEXT NOT NULL,
+    #             contact_number_2 TEXT,
+    #             address TEXT NOT NULL,
+    #             email_id TEXT NOT NULL UNIQUE
+    #         );
+    #         """
+    #     )
+    with conn:
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS hospital_record (
+                id TEXT PRIMARY KEY,
+                password TEXT NOT NULL,
+                name TEXT NOT NULL,
+                verification_document1 TEXT NOT NULL UNIQUE,
+                verification_document2 TEXT UNIQUE,
+                contact_number_1 INTEGER NOT NULL UNIQUE,
+                contact_number_2 INTEGER UNIQUE,
+                address TEXT NOT NULL,
+                city TEXT NOT NULL,
+                state TEXT NOT NULL,
                 pin_code TEXT NOT NULL,
-                FOREIGN KEY (department_id) REFERENCES department_record(id)
-                ON UPDATE CASCADE
-                ON DELETE RESTRICT
+                date_of_registration TEXT NOT NULL,
+                time_of_registration TEXT NOT NULL,
+                description TEXT NOT NULL,
+                image1 IMAGE NOT NULL,
+                image2 IMAGE NOT NULL
             );
             """
         )
     with conn:
         c.execute(
             """
-            CREATE TABLE IF NOT EXISTS department_record (
+            CREATE TABLE IF NOT EXISTS pharmacy_record (
                 id TEXT PRIMARY KEY,
-                name TEXT NOT NULL UNIQUE,
-                description TEXT NOT NULL,
-                contact_number_1 TEXT NOT NULL,
-                contact_number_2 TEXT,
+                password TEXT NOT NULL,
+                name TEXT NOT NULL,
+                verification_document1 TEXT NOT NULL UNIQUE,
+                verification_document2 TEXT UNIQUE,
+                contact_number_1 INTEGER NOT NULL UNIQUE,
+                contact_number_2 INTEGER UNIQUE,
                 address TEXT NOT NULL,
-                email_id TEXT NOT NULL UNIQUE
+                city TEXT NOT NULL,
+                state TEXT NOT NULL,
+                pin_code TEXT NOT NULL,
+                date_of_registration TEXT NOT NULL,
+                time_of_registration TEXT NOT NULL,
+                description TEXT NOT NULL,
+                image1 IMAGE NOT NULL,
+                image2 IMAGE NOT NULL
+            );
+            """
+        )
+
+    with conn:
+        c.execute(
+            """
+            CREATE TABLE IF NOT EXISTS insurance_company_record (
+                id TEXT PRIMARY KEY,
+                password TEXT NOT NULL,
+                name TEXT NOT NULL,
+                verification_document1 TEXT NOT NULL UNIQUE,
+                verification_document2 TEXT UNIQUE,
+                contact_number_1 INTEGER NOT NULL UNIQUE,
+                contact_number_2 INTEGER UNIQUE,
+                address TEXT NOT NULL,
+                city TEXT NOT NULL,
+                state TEXT NOT NULL,
+                pin_code TEXT NOT NULL,
+                date_of_registration TEXT NOT NULL,
+                time_of_registration TEXT NOT NULL,
+                description TEXT NOT NULL,
+                image1 IMAGE NOT NULL,
+                image2 IMAGE NOT NULL
             );
             """
         )

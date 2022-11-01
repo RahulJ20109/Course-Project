@@ -4,6 +4,8 @@ import database as db
 import pandas as pd
 
 # function to verify department id
+
+
 def verify_department_id(department_id):
     verify = False
     conn, c = db.connection()
@@ -22,23 +24,27 @@ def verify_department_id(department_id):
     return verify
 
 # function to show the details of department(s) given in a list (provided as a parameter)
+
+
 def show_department_details(list_of_departments):
     department_titles = ['Department ID', 'Department name', 'Description', 'Contact number',
-                     'Alternate contact number', 'Address', 'Email ID']
+                         'Alternate contact number', 'Address', 'Email ID']
     if len(list_of_departments) == 0:
         st.warning('No data to show')
     elif len(list_of_departments) == 1:
         department_details = [x for x in list_of_departments[0]]
-        series = pd.Series(data = department_details, index = department_titles)
+        series = pd.Series(data=department_details, index=department_titles)
         st.write(series)
     else:
         department_details = []
         for department in list_of_departments:
             department_details.append([x for x in department])
-        df = pd.DataFrame(data = department_details, columns = department_titles)
+        df = pd.DataFrame(data=department_details, columns=department_titles)
         st.write(df)
 
 # function to generate unique department id using current date and time
+
+
 def generate_department_id():
     id_1 = datetime.now().strftime('%S%M%H')
     id_2 = datetime.now().strftime('%Y%m%d')[2:]
@@ -46,6 +52,8 @@ def generate_department_id():
     return id
 
 # function to show the doctor id and name of doctor(s) given in a list (provided as a parameter)
+
+
 def show_list_of_doctors(list_of_doctors):
     doctor_titles = ['Doctor ID', 'Name']
     if len(list_of_doctors) == 0:
@@ -54,10 +62,12 @@ def show_list_of_doctors(list_of_doctors):
         doctor_details = []
         for doctor in list_of_doctors:
             doctor_details.append([x for x in doctor])
-        df = pd.DataFrame(data = doctor_details, columns = doctor_titles)
+        df = pd.DataFrame(data=doctor_details, columns=doctor_titles)
         st.write(df)
 
 # function to fetch department name from the database for the given department id
+
+
 def get_department_name(dept_id):
     conn, c = db.connection()
     with conn:
@@ -67,11 +77,13 @@ def get_department_name(dept_id):
             FROM department_record
             WHERE id = :id;
             """,
-            { 'id': dept_id }
+            {'id': dept_id}
         )
     return c.fetchone()[0]
 
 # class containing all the fields and methods required to work with the departments' table in the database
+
+
 class Department:
 
     def __init__(self):
@@ -90,7 +102,8 @@ class Department:
         self.description = st.text_area('Description')
         self.contact_number_1 = st.text_input('Contact number')
         contact_number_2 = st.text_input('Alternate contact number (optional)')
-        self.contact_number_2 = (lambda phone : None if phone == '' else phone)(contact_number_2)
+        self.contact_number_2 = (
+            lambda phone: None if phone == '' else phone)(contact_number_2)
         self.address = st.text_area('Address')
         self.email_id = st.text_input('Email ID')
         self.id = generate_department_id()
@@ -124,7 +137,8 @@ class Department:
 
     # method to update an existing department record in the database
     def update_department(self):
-        id = st.text_input('Enter Department ID of the department to be updated')
+        id = st.text_input(
+            'Enter Department ID of the department to be updated')
         if id == '':
             st.empty()
         elif not verify_department_id(id):
@@ -141,7 +155,7 @@ class Department:
                     FROM department_record
                     WHERE id = :id;
                     """,
-                    { 'id': id }
+                    {'id': id}
                 )
                 st.write('Here are the current details of the department:')
                 show_department_details(c.fetchall())
@@ -149,8 +163,10 @@ class Department:
             st.write('Enter new details of the department:')
             self.description = st.text_area('Description')
             self.contact_number_1 = st.text_input('Contact number')
-            contact_number_2 = st.text_input('Alternate contact number (optional)')
-            self.contact_number_2 = (lambda phone : None if phone == '' else phone)(contact_number_2)
+            contact_number_2 = st.text_input(
+                'Alternate contact number (optional)')
+            self.contact_number_2 = (
+                lambda phone: None if phone == '' else phone)(contact_number_2)
             self.address = st.text_area('Address')
             self.email_id = st.text_input('Email ID')
             update = st.button('Update')
@@ -178,7 +194,8 @@ class Department:
 
     # method to delete an existing department record from the database
     def delete_department(self):
-        id = st.text_input('Enter Department ID of the department to be deleted')
+        id = st.text_input(
+            'Enter Department ID of the department to be deleted')
         if id == '':
             st.empty()
         elif not verify_department_id(id):
@@ -195,7 +212,7 @@ class Department:
                     FROM department_record
                     WHERE id = :id;
                     """,
-                    { 'id': id }
+                    {'id': id}
                 )
                 st.write('Here are the details of the department to be deleted:')
                 show_department_details(c.fetchall())
@@ -211,7 +228,7 @@ class Department:
                             DELETE FROM department_record
                             WHERE id = :id;
                             """,
-                            { 'id': id }
+                            {'id': id}
                         )
                         st.success('Department details deleted successfully.')
             conn.close()
@@ -231,7 +248,8 @@ class Department:
 
     # method to search and show a particular department's details in the database using department id
     def search_department(self):
-        id = st.text_input('Enter Department ID of the department to be searched')
+        id = st.text_input(
+            'Enter Department ID of the department to be searched')
         if id == '':
             st.empty()
         elif not verify_department_id(id):
@@ -246,15 +264,17 @@ class Department:
                     FROM department_record
                     WHERE id = :id;
                     """,
-                    { 'id': id }
+                    {'id': id}
                 )
-                st.write('Here are the details of the department you searched for:')
+                st.write(
+                    'Here are the details of the department you searched for:')
                 show_department_details(c.fetchall())
             conn.close()
 
     # method to show the list of doctors working in a particular department (using department id)
     def list_dept_doctors(self):
-        dept_id = st.text_input('Enter Department ID to get a list of doctors working in that department')
+        dept_id = st.text_input(
+            'Enter Department ID to get a list of doctors working in that department')
         if dept_id == '':
             st.empty()
         elif not verify_department_id(dept_id):
@@ -269,8 +289,9 @@ class Department:
                     FROM doctor_record
                     WHERE department_id = :dept_id;
                     """,
-                    { 'dept_id': dept_id }
+                    {'dept_id': dept_id}
                 )
-                st.write('Here is the list of doctors working in the', get_department_name(dept_id), 'department:')
+                st.write('Here is the list of doctors working in the',
+                         get_department_name(dept_id), 'department:')
                 show_list_of_doctors(c.fetchall())
             conn.close()

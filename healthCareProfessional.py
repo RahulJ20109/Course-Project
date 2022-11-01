@@ -6,18 +6,18 @@ import pandas as pd
 # function to verify patient id
 
 
-def verify_patient_id(patient_id):
+def verify_id(id):
     verify = False
     conn, c = db.connection()
     with conn:
         c.execute(
             """
             SELECT id
-            FROM patient_record;
+            FROM healthCareProfessional_record;
             """
         )
     for id in c.fetchall():
-        if id[0] == patient_id:
+        if id[0] == id:
             verify = True
             break
     conn.close()
@@ -26,13 +26,11 @@ def verify_patient_id(patient_id):
 # function to generate unique patient id using current date and time
 
 
-def generate_patient_id(reg_date, reg_time):
+def generate_id(reg_date, reg_time):
     id_1 = ''.join(reg_time.split(':')[::-1])
     id_2 = ''.join(reg_date.split('-')[::-1])[2:]
-    id = f'P-{id_1}-{id_2}'
+    id = f'H-{id_1}-{id_2}'
     return id
-
-# function to calculate age using given date of birth
 
 
 def calculate_age(dob):
@@ -40,39 +38,55 @@ def calculate_age(dob):
     age = today.year - dob.year - \
         ((dob.month, dob.day) > (today.month, today.day))
     return age
-
 # function to show the details of patient(s) given in a list (provided as a parameter)
 
 
-def show_patient_details(list_of_patients):
-    patient_titles = ['Patient ID', 'Name', 'Age', 'Gender', 'Date of birth (DD-MM-YYYY)',
-                      'Blood group', 'Contact number', 'Alternate contact number',
-                      'Aadhar ID / Voter ID', 'Weight (kg)', 'Height (cm)', 'Address',
-                      'City', 'State', 'PIN code', "Next of kin's name",
-                      "Next of kin's relation to patient",
-                      "Next of kin's contact number", 'Email ID',
-                      'Date of registration (DD-MM-YYYY)', 'Time of registration (hh:mm:ss)']
-    if len(list_of_patients) == 0:
+def show_details(list_of_professionals):
+    titles = ['ID', 'Name', 'Age', 'Gender', 'Date of birth (DD-MM-YYYY)',
+              'Contact number', 'Alternate contact number']
+    if len(list_of_professionals) == 0:
         st.warning('No data to show')
-    elif len(list_of_patients) == 1:
-        patient_details = [x for x in list_of_patients[0]]
-        series = pd.Series(data=patient_details, index=patient_titles)
+    elif len(list_of_professionals) == 1:
+        details = [x for x in list_of_professionals[0]]
+        series = pd.Series(data=details, index=titles)
         st.write(series)
     else:
-        patient_details = []
-        for patient in list_of_patients:
-            patient_details.append([x for x in patient])
-        df = pd.DataFrame(data=patient_details, columns=patient_titles)
+        details = []
+        for professional in list_of_professionals:
+            details.append([x for x in professional])
+        df = pd.DataFrame(data=details, columns=titles)
         st.write(df)
 
 # class containing all the fields and methods required to work with the patients' table in the database
 
 
-class Patient:
+class HealthCareProfessional:
 
     def __init__(self):
+        """
+        id TEXT PRIMARY KEY,
+                username TEXT NOT NULL,
+                password TEXT,
+                name TEXT NOT NULL,
+                age INTEGER NOT NULL,
+                gender TEXT NOT NULL,
+                date_of_birth TEXT NOT NULL,
+                blood_group TEXT NOT NULL,
+                contact_number_1 TEXT NOT NULL,
+                contact_number_2 TEXT,
+                verification_document TEXT NOT NULL UNIQUE,
+                email_id TEXT NOT NULL UNIQUE,
+                qualification TEXT NOT NULL,
+                specialisation TEXT NOT NULL,
+                years_of_experience INTEGER NOT NULL,
+                address TEXT NOT NULL,
+                city TEXT NOT NULL,
+                state TEXT NOT NULL,
+                pin_code TEXT NOT NULL,
+        """
         self.name = str()
         self.id = str()
+        self.username = str()
         self.password = str()
         self.verification_document = str()
         self.gender = str()
@@ -81,25 +95,26 @@ class Patient:
         self.contact_number_2 = str()
         self.date_of_birth = str()
         self.blood_group = str()
-        self.date_of_registration = str()
-        self.time_of_registration = str()
         self.email_id = str()
-        self.aadhar_or_voter_id = str()
-        self.height = int()
-        self.weight = int()
-        self.next_of_kin_name = str()
-        self.next_of_kin_relation_to_patient = str()
-        self.next_of_kin_contact_number = str()
         self.address = str()
         self.city = str()
         self.state = str()
         self.pin_code = str()
+        self.qualification = str()
+        self.specialisation = str()
+        self.years_of_experience = int()
+        self.address = str()
+        self.city = str()
+        self.state = str()
+        self.time_of_registration = str()
+        self.date_of_registration = str()
 
     # method to add a new patient record to the database
-    def add_patient(self):
-        st.write('Enter patient details:')
+
+    def add_healthCareProfessional(self):
+        st.write('Enter details:')
         self.name = st.text_input('Full name')
-        st.write('Enter password for this patient:')
+        st.write('Enter Password')
         self.password = st.text_input('Password', type='password')
         gender = st.radio('Gender', ['Female', 'Male', 'Other'])
         if gender == 'Other':
@@ -116,27 +131,17 @@ class Patient:
         contact_number_2 = st.text_input('Alternate contact number (optional)')
         self.contact_number_2 = (
             lambda phone: None if phone == '' else phone)(contact_number_2)
-        self.aadhar_or_voter_id = st.text_input('Aadhar ID / Voter ID')
-        self.weight = st.number_input(
-            'Weight (in kg)', value=0, min_value=0, max_value=400)
-        self.height = st.number_input(
-            'Height (in cm)', value=0, min_value=0, max_value=275)
         self.address = st.text_area('Address')
         self.city = st.text_input('City')
         self.state = st.text_input('State')
         self.pin_code = st.text_input('PIN code')
-        self.next_of_kin_name = st.text_input("Next of kin's name")
-        self.next_of_kin_relation_to_patient = st.text_input(
-            "Next of kin's relation to patient")
-        self.next_of_kin_contact_number = st.text_input(
-            "Next of kin's contact number")
         email_id = st.text_input('Email ID (optional)')
         self.email_id = (lambda email: None if email ==
                          '' else email)(email_id)
         self.date_of_registration = datetime.now().strftime('%d-%m-%Y')
         self.time_of_registration = datetime.now().strftime('%H:%M:%S')
-        self.id = generate_patient_id(self.date_of_registration,
-                                      self.time_of_registration)
+        self.id = generate_id(self.date_of_registration,
+                              self.time_of_registration)
         self.verification_document = st.text_input('Verification document')
         save = st.button('Save')
 
@@ -146,37 +151,30 @@ class Patient:
             with conn:
                 c.execute(
                     """
-                    INSERT INTO patient_record
+                    INSERT INTO healthCareProfessional_record
                     (
-                        id, password, name, age, gender, date_of_birth, blood_group,verification_document
-                        contact_number_1, contact_number_2, aadhar_or_voter_id,
-                        weight, height, address,city, state, pin_code,
-                        next_of_kin_name, next_of_kin_relation_to_patient,
-                        next_of_kin_contact_number, email_id,
+                        id,username, password, name, age, gender, date_of_birth, blood_group,verification_document
+                        contact_number_1, contact_number_2, address,city, state, pin_code, email_id,
                         date_of_registration, time_of_registration
                     )
                     VALUES (
-                        :id,:password :name, :age, :gender, :dob, :blood_group,:verification_document
-                        :phone_1, :phone_2, :uid, :weight, :height,
-                        :address, :city, :state, :pin,
-                        :kin_name, :kin_relation, :kin_phone, :email_id,
+                        :id,:username,:password :name, :age, :gender, :dob, :blood_group,:verification_document
+                        :phone_1, :phone_2, 
+                        :address, :city, :state, :pin, :email_id,
                         :reg_date, :reg_time
                     );
                     """,
                     {
-                        'id': self.id, 'password': self.password,
+                        'id': self.id, 'username': self.username, 'password': self.password,
                         'name': self.name, 'age': self.age,
                         'gender': self.gender, 'dob': self.date_of_birth,
                         'blood_group': self.blood_group,
                         'verification_document': self.verification_document,
                         'phone_1': self.contact_number_1,
                         'phone_2': self.contact_number_2,
-                        'uid': self.aadhar_or_voter_id, 'weight': self.weight,
-                        'height': self.height, 'address': self.address,
+                        'address': self.address,
                         'city': self.city, 'state': self.state,
-                        'pin': self.pin_code, 'kin_name': self.next_of_kin_name,
-                        'kin_relation': self.next_of_kin_relation_to_patient,
-                        'kin_phone': self.next_of_kin_contact_number,
+                        'pin': self.pin_code,
                         'email_id': self.email_id,
                         'reg_date': self.date_of_registration,
                         'reg_time': self.time_of_registration
@@ -191,11 +189,12 @@ class Patient:
 
     # method to update an existing patient record in the database
 
-    def update_patient(self):
-        id = st.text_input('Enter Patient ID of the patient to be updated')
+    def update(self):
+        id = st.text_input(
+            'Enter ID of the Health Care Professional to be updated')
         if id == '':
             st.empty()
-        elif not verify_patient_id(id):
+        elif not verify_id(id):
             st.error('Invalid Patient ID')
         else:
             st.success('Verified')
@@ -206,33 +205,24 @@ class Patient:
                 c.execute(
                     """
                     SELECT *
-                    FROM patient_record
+                    FROM healthCareProfessional_record
                     WHERE id = :id;
                     """,
                     {'id': id}
                 )
-                st.write('Here are the current details of the patient:')
-                show_patient_details(c.fetchall())
+                st.write('Here are the current details of the professional:')
+                show_details(c.fetchall())
 
-            st.write('Enter new details of the patient:')
+            st.write('Enter new details:')
             self.contact_number_1 = st.text_input('Contact number')
             contact_number_2 = st.text_input(
                 'Alternate contact number (optional)')
             self.contact_number_2 = (
                 lambda phone: None if phone == '' else phone)(contact_number_2)
-            self.weight = st.number_input(
-                'Weight (in kg)', value=0, min_value=0, max_value=400)
-            self.height = st.number_input(
-                'Height (in cm)', value=0, min_value=0, max_value=275)
             self.address = st.text_area('Address')
             self.city = st.text_input('City')
             self.state = st.text_input('State')
             self.pin_code = st.text_input('PIN code')
-            self.next_of_kin_name = st.text_input("Next of kin's name")
-            self.next_of_kin_relation_to_patient = st.text_input(
-                "Next of kin's relation to patient")
-            self.next_of_kin_contact_number = st.text_input(
-                "Next of kin's contact number")
             email_id = st.text_input('Email ID (optional)')
             self.email_id = (lambda email: None if email ==
                              '' else email)(email_id)
@@ -244,7 +234,7 @@ class Patient:
                     c.execute(
                         """
                         SELECT date_of_birth
-                        FROM patient_record
+                        FROM healthCareProfessional_record
                         WHERE id = :id;
                         """,
                         {'id': id}
@@ -258,38 +248,31 @@ class Patient:
                 with conn:
                     c.execute(
                         """
-                        UPDATE patient_record
+                        UPDATE healthCareProfessional_record
                         SET age = :age, contact_number_1 = :phone_1,
-                        contact_number_2 = :phone_2, weight = :weight,
-                        height = :height, address = :address, city = :city,
-                        state = :state, pin_code = :pin, next_of_kin_name = :kin_name,
-                        next_of_kin_relation_to_patient = :kin_relation,
-                        next_of_kin_contact_number = :kin_phone, email_id = :email_id
+                        contact_number_2 = :phone_2, address = :address, city = :city,
+                        state = :state, pin_code = :pin,email_id = :email_id
                         WHERE id = :id;
                         """,
                         {
                             'id': id, 'age': self.age,
                             'phone_1': self.contact_number_1,
                             'phone_2': self.contact_number_2,
-                            'weight': self.weight, 'height': self.height,
                             'address': self.address, 'city': self.city,
                             'state': self.state, 'pin': self.pin_code,
-                            'kin_name': self.next_of_kin_name,
-                            'kin_relation': self.next_of_kin_relation_to_patient,
-                            'kin_phone': self.next_of_kin_contact_number,
                             'email_id': self.email_id
                         }
                     )
-                st.success('Patient details updated successfully.')
+                st.success('Details updated successfully.')
                 conn.close()
 
     # method to delete an existing patient record from the database
-    def delete_patient(self):
-        id = st.text_input('Enter Patient ID of the patient to be deleted')
+    def delete_professional(self):
+        id = st.text_input('Enter ID of the professional to be deleted')
         if id == '':
             st.empty()
-        elif not verify_patient_id(id):
-            st.error('Invalid Patient ID')
+        elif not verify_id(id):
+            st.error('Invalid ID')
         else:
             st.success('Verified')
             conn, c = db.connection()
@@ -299,13 +282,13 @@ class Patient:
                 c.execute(
                     """
                     SELECT *
-                    FROM patient_record
+                    FROM healthCareProfessional_record
                     WHERE id = :id;
                     """,
                     {'id': id}
                 )
-                st.write('Here are the details of the patient to be deleted:')
-                show_patient_details(c.fetchall())
+                st.write('Here are the details of the professional to be deleted:')
+                show_details(c.fetchall())
 
                 confirm = st.checkbox('Check this box to confirm deletion')
                 if confirm:
@@ -315,34 +298,34 @@ class Patient:
                     if delete:
                         c.execute(
                             """
-                            DELETE FROM patient_record
+                            DELETE FROM healthCareProfessional_record
                             WHERE id = :id;
                             """,
                             {'id': id}
                         )
-                        st.success('Patient details deleted successfully.')
+                        st.success('Details deleted successfully.')
             conn.close()
 
     # method to show the complete patient record
-    def show_all_patients(self):
+    def show_all_professionals(self):
         conn, c = db.connection()
         with conn:
             c.execute(
                 """
                 SELECT *
-                FROM patient_record;
+                FROM healthCareProfessional_record;
                 """
             )
-            show_patient_details(c.fetchall())
+            show_details(c.fetchall())
         conn.close()
 
     # method to search and show a particular patient's details in the database using patient id
-    def search_patient(self):
-        id = st.text_input('Enter Patient ID of the patient to be searched')
+    def search_professional(self):
+        id = st.text_input('Enter ID of the professional to be searched')
         if id == '':
             st.empty()
-        elif not verify_patient_id(id):
-            st.error('Invalid Patient ID')
+        elif not verify_id(id):
+            st.error('Invalid ID')
         else:
             st.success('Verified')
             conn, c = db.connection()
@@ -350,11 +333,12 @@ class Patient:
                 c.execute(
                     """
                     SELECT *
-                    FROM patient_record
+                    FROM healthCareProfessional_record
                     WHERE id = :id;
                     """,
                     {'id': id}
                 )
-                st.write('Here are the details of the patient you searched for:')
-                show_patient_details(c.fetchall())
+                st.write(
+                    'Here are the details of the professional you searched for:')
+                show_details(c.fetchall())
             conn.close()
